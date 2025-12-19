@@ -23,6 +23,15 @@ color: #e6f0ff;
     0 0 0 2px #0f766e,
     6px 6px 0 #000;
     }
+    .stat {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 0;
+  border: 2px solid #facc15;
+  background: #0b0e12;
+  box-shadow: 3px 3px 0 #000;
+  font-size: 12px;
+}
     h1 { margin: 0 0 8px; font-size: 28px; }
     .muted { opacity: .75; line-height: 1.5; }
     .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
@@ -138,13 +147,27 @@ button.choice:active {
 
     // Короткие описания (пока базовые — потом отшлифуем)
     const TYPE_DESC = {
-      mammal: "Тепло, контакт, близость, «я живу через отношения и эмоции».",
-      reptile: "Адаптация, наблюдение, экономия энергии, точные реакции.",
-      tree: "Устойчивость, свой темп, рост, спокойная сила и опора.",
-      mycelium: "Глубина, чувствительность, скрытые связи, внутренняя жизнь.",
-      hive: "Структура, ритм, вклад, «мне важно, чтобы всё работало».",
+  mammal: "Тёплый тип. Живёшь через контакт, эмоции и ощущение «мы».",
+  reptile: "Собранный тип. Экономишь энергию, наблюдаешь и действуешь точно.",
+  tree: "Стабильный тип. Держишь свой темп, растёшь постепенно и надёжно.",
+  mycelium: "Глубокий тип. Чувствуешь нюансы, связи и атмосферу.",
+  hive: "Системный тип. Любишь структуру, ясность и ощущение вклада."
     };
+const TYPE_STATS = {
+  mammal: ["Контакт", "Сочувствие", "Тепло", "Импульс"],
+  reptile: ["Экономия энергии", "Наблюдение", "Адаптация"],
+  tree: ["Устойчивость", "Рост", "Опора"],
+  mycelium: ["Глубина", "Чуткость", "Интуиция"],
+  hive: ["Структура", "Ритм", "Эффективность"]
+};
 
+const TYPE_HELP = {
+  mammal: "Тебе помогает тёплый контакт, движение и разговор.",
+  reptile: "Тебе помогает пауза, минимализм и ясный план.",
+  tree: "Тебе помогает стабильный режим и привычки.",
+  mycelium: "Тебе помогает тишина, творчество и время на переваривание.",
+  hive: "Тебе помогает понятная цель и структура."
+};
     // Вопросы: ответы уже «скрыты» (без эмодзи), но веса соответствуют твоей изначальной логике.
     // Веса: даём 2 очка основному типу и 1 очко соседнему (чтобы тест был мягче).
     const QUESTIONS = [
@@ -464,6 +487,14 @@ button.choice:active {
         <div class="muted">${TYPE_DESC[winner]}</div>
 
         <div class="spacer"></div>
+<div class="card" style="padding:14px; border-radius:0;">
+  <div class="row" style="gap:8px;">
+    ${TYPE_STATS[winner].map(s => `<span class="stat">${s}</span>`).join("")}
+  </div>
+  <div class="spacer" style="height:10px;"></div>
+  <div class="mini">${TYPE_HELP[winner]}</div>
+</div>
+
         <div class="grid2">
           ${order.map((k) => {
             const v = scores[k];
