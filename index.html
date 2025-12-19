@@ -46,19 +46,50 @@ color: #e6f0ff;
       cursor: pointer;
       transition: transform .04s ease, background .15s ease, border-color .15s ease;
     }
-    button.choice:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.16); }
-    button.choice:active { transform: translateY(1px); }
+    button.choice {
+  width: 100%;
+  text-align: left;
+  padding: 14px;
+  border-radius: 0;
+  border: 2px solid #38bdf8;
+  background: #0b0e12;
+  color: #e6f0ff;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 #000;
+  transition: none;
+}
 
+button.choice:hover {
+  border-color: #facc15;
+}
+
+button.choice:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #000;
+}
     .btn {
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-      color: inherit;
-      cursor: pointer;
-    }
-    .btn.primary { background: rgba(233,238,247,0.16); }
-    .btn:disabled { opacity: .5; cursor: not-allowed; }
+  padding: 10px 12px;
+  border-radius: 0;
+  border: 2px solid #2dd4bf;
+  background: #0b0e12;
+  color: inherit;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 #000;
+}
+
+.btn.primary {
+  border-color: #facc15;
+}
+
+.btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #000;
+}
+
+.btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
     .pill {
       display: inline-block;
       padding: 6px 10px;
