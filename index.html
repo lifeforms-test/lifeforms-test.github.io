@@ -1,18 +1,470 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Life Forms</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Форма жизни</title>
+  <style>
+    :root { --pad: 18px; --radius: 16px; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin: 0; padding: 0;
+      background: #0f1115; color: #e9eef7;
+    }
+    .wrap { max-width: 780px; margin: 0 auto; padding: 28px 16px; }
+    .card {
+      background: #151a22;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      padding: var(--pad);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    .muted { opacity: .75; line-height: 1.5; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .spacer { height: 14px; }
+    .progress {
+      height: 10px; border-radius: 999px; overflow: hidden;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .bar { height: 100%; width: 0%; background: rgba(233,238,247,0.65); }
+    .qtitle { margin: 14px 0 10px; font-size: 18px; line-height: 1.35; }
+    .answers { display: grid; gap: 10px; margin-top: 10px; }
+    button.choice {
+      width: 100%;
+      text-align: left;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.03);
+      color: inherit;
+      cursor: pointer;
+      transition: transform .04s ease, background .15s ease, border-color .15s ease;
+    }
+    button.choice:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.16); }
+    button.choice:active { transform: translateY(1px); }
+
+    .btn {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: inherit;
+      cursor: pointer;
+    }
+    .btn.primary { background: rgba(233,238,247,0.16); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      font-size: 13px;
+      opacity: .9;
+    }
+    .resultTitle { font-size: 22px; margin: 10px 0 6px; }
+    .grid2 { display:grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 740px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+    .mini { font-size: 13px; opacity: .75; line-height: 1.45; }
+    .scoreRow { display:flex; justify-content:space-between; gap:10px; }
+    .scoreBarWrap { height: 8px; border-radius: 999px; overflow:hidden; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.08); }
+    .scoreBar { height: 100%; width: 0%; background: rgba(233,238,247,0.65); }
+  </style>
 </head>
 <body>
+  <div class="wrap">
+    <div class="card" id="app"></div>
+    <div class="spacer"></div>
+    <div class="muted mini">Подсказка: вопросы и ответы каждый раз перемешиваются. Это специально 🙂</div>
+  </div>
 
-<h1>Форма жизни</h1>
-<p>Фановый психологический тест</p>
+  <script>
+    // Типы (наши новые названия)
+    const TYPES = {
+      mammal: "Млекопитающее",
+      reptile: "Рептилия",
+      tree: "Древо",
+      mycelium: "Мицелий",
+      hive: "Улей",
+    };
 
-<button onclick="alert('Сайт работает! 🎉')">
-  Начать тест
-</button>
+    // Короткие описания (пока базовые — потом отшлифуем)
+    const TYPE_DESC = {
+      mammal: "Тепло, контакт, близость, «я живу через отношения и эмоции».",
+      reptile: "Адаптация, наблюдение, экономия энергии, точные реакции.",
+      tree: "Устойчивость, свой темп, рост, спокойная сила и опора.",
+      mycelium: "Глубина, чувствительность, скрытые связи, внутренняя жизнь.",
+      hive: "Структура, ритм, вклад, «мне важно, чтобы всё работало».",
+    };
 
+    // Вопросы: ответы уже «скрыты» (без эмодзи), но веса соответствуют твоей изначальной логике.
+    // Веса: даём 2 очка основному типу и 1 очко соседнему (чтобы тест был мягче).
+    const QUESTIONS = [
+      {
+        text: "Твой естественный ритм жизни ближе к тому, чтобы:",
+        answers: [
+          { t: "Жить размеренно, не ускоряясь без необходимости", w: { tree: 2, mycelium: 1 } },
+          { t: "Подстраиваться под внутренние состояния, а не под часы", w: { mycelium: 2, tree: 1 } },
+          { t: "Делать многое, если есть понятная структура и цель", w: { hive: 2, mammal: 1 } },
+          { t: "Чередовать долгие периоды покоя с короткими всплесками активности", w: { reptile: 2, hive: 1 } },
+          { t: "Жить через эмоции и события, которые сами задают темп", w: { mammal: 2, mycelium: 1 } },
+        ],
+      },
+      {
+        text: "Когда внешний мир начинает требовать ускорения, ты скорее:",
+        answers: [
+          { t: "Сопротивляешься и стараешься сохранить устойчивость", w: { tree: 2, mammal: 1 } },
+          { t: "Начинаешь чувствовать перегрузку и уходишь «внутрь»", w: { mycelium: 2, reptile: 1 } },
+          { t: "Собираешься и оптимизируешь свои действия", w: { hive: 2, reptile: 1 } },
+          { t: "Сокращаешь всё лишнее до минимума", w: { reptile: 2, hive: 1 } },
+          { t: "Реагируешь через стресс или возбуждение", w: { mammal: 2, hive: 1 } },
+        ],
+      },
+      {
+        text: "Столкнувшись с трудностями, ты чаще:",
+        answers: [
+          { t: "Терпеливо пережидаешь", w: { tree: 2, reptile: 1 } },
+          { t: "Переосмысливаешь происходящее", w: { mycelium: 2, tree: 1 } },
+          { t: "Решаешь проблему шаг за шагом", w: { hive: 2, tree: 1 } },
+          { t: "Прячешься и экономишь силы", w: { reptile: 2, mycelium: 1 } },
+          { t: "Проживаешь это эмоционально", w: { mammal: 2, mycelium: 1 } },
+        ],
+      },
+      {
+        text: "Неудачи для тебя — это:",
+        answers: [
+          { t: "Часть естественного цикла", w: { tree: 2, mycelium: 1 } },
+          { t: "Материал для внутренней трансформации", w: { mycelium: 2, mammal: 1 } },
+          { t: "Ошибки, которые нужно исправить", w: { hive: 2, reptile: 1 } },
+          { t: "Сигнал переждать и не высовываться", w: { reptile: 2, tree: 1 } },
+          { t: "Боль, которая имеет значение", w: { mammal: 2, tree: 1 } },
+        ],
+      },
+      {
+        text: "В общении с людьми ты больше ценишь:",
+        answers: [
+          { t: "Спокойное присутствие рядом", w: { tree: 2, mammal: 1 } },
+          { t: "Глубину и тонкое понимание", w: { mycelium: 2, mammal: 1 } },
+          { t: "Чёткие роли и договорённости", w: { hive: 2, reptile: 1 } },
+          { t: "Дистанцию и личные границы", w: { reptile: 2, mycelium: 1 } },
+          { t: "Близость и эмоциональный контакт", w: { mammal: 2, tree: 1 } },
+        ],
+      },
+      {
+        text: "Когда ты остаёшься один, это:",
+        answers: [
+          { t: "Это естественное состояние", w: { tree: 2, reptile: 1 } },
+          { t: "Это пространство для внутренней жизни", w: { mycelium: 2, tree: 1 } },
+          { t: "Это пауза между задачами", w: { hive: 2, reptile: 1 } },
+          { t: "Это необходимое восстановление", w: { reptile: 2, tree: 1 } },
+          { t: "Это может быть довольно тяжело", w: { mammal: 2, mycelium: 1 } },
+        ],
+      },
+      {
+        text: "Общество для тебя — это:",
+        answers: [
+          { t: "Среда, в которой ты просто существуешь", w: { tree: 2, mycelium: 1 } },
+          { t: "Сложная сеть взаимных влияний", w: { mycelium: 2, hive: 1 } },
+          { t: "Система, в которой у каждого есть функция", w: { hive: 2, tree: 1 } },
+          { t: "Источник потенциального напряжения", w: { reptile: 2, mammal: 1 } },
+          { t: "Пространство отношений", w: { mammal: 2, tree: 1 } },
+        ],
+      },
+      {
+        text: "Социальные правила ты:",
+        answers: [
+          { t: "Принимаешь как данность", w: { tree: 2, reptile: 1 } },
+          { t: "Чувствуешь, но не всегда понимаешь", w: { mycelium: 2, mammal: 1 } },
+          { t: "Стараешься соблюдать", w: { hive: 2, tree: 1 } },
+          { t: "Избегаешь, если есть возможность", w: { reptile: 2, mycelium: 1 } },
+          { t: "Переживаешь через чувство справедливости", w: { mammal: 2, hive: 1 } },
+        ],
+      },
+      {
+        text: "Природа для тебя — это:",
+        answers: [
+          { t: "Дом", w: { tree: 2, mammal: 1 } },
+          { t: "Живая, чувствующая среда", w: { mycelium: 2, tree: 1 } },
+          { t: "Ресурс и система", w: { hive: 2, reptile: 1 } },
+          { t: "Среда выживания", w: { reptile: 2, hive: 1 } },
+          { t: "Источник чувств", w: { mammal: 2, mycelium: 1 } },
+        ],
+      },
+      {
+        text: "Когда ты оказываешься в природной среде, ты:",
+        answers: [
+          { t: "Успокаиваешься", w: { tree: 2, reptile: 1 } },
+          { t: "Начинаешь чувствовать себя «на месте»", w: { mycelium: 2, tree: 1 } },
+          { t: "Наблюдаешь и изучаешь", w: { hive: 2, reptile: 1 } },
+          { t: "Расслабляешься телом", w: { reptile: 2, tree: 1 } },
+          { t: "Эмоционально наполняешься", w: { mammal: 2, mycelium: 1 } },
+        ],
+      },
+      {
+        text: "Еда для тебя — это прежде всего:",
+        answers: [
+          { t: "Поддержание жизни", w: { tree: 2, reptile: 1 } },
+          { t: "Чувственный опыт", w: { mycelium: 2, mammal: 1 } },
+          { t: "Топливо", w: { hive: 2, reptile: 1 } },
+          { t: "Энергия, которую важно не тратить зря", w: { reptile: 2, hive: 1 } },
+          { t: "Источник удовольствия и тепла", w: { mammal: 2, tree: 1 } },
+        ],
+      },
+      {
+        text: "Обычно ты:",
+        answers: [
+          { t: "Ешь просто и регулярно", w: { tree: 2, hive: 1 } },
+          { t: "Чувствуешь, что и когда хочется", w: { mycelium: 2, mammal: 1 } },
+          { t: "Следишь за режимом или пользой", w: { hive: 2, tree: 1 } },
+          { t: "Можешь долго обходиться без еды", w: { reptile: 2, tree: 1 } },
+          { t: "Связываешь еду с эмоциями", w: { mammal: 2, mycelium: 1 } },
+        ],
+      },
+      {
+        text: "Твоё отношение к родителям ближе к:",
+        answers: [
+          { t: "Принятию", w: { tree: 2, mycelium: 1 } },
+          { t: "Сложной внутренней связи", w: { mycelium: 2, mammal: 1 } },
+          { t: "Чувству долга", w: { hive: 2, tree: 1 } },
+          { t: "Дистанции", w: { reptile: 2, mycelium: 1 } },
+          { t: "Сильным, противоречивым эмоциям", w: { mammal: 2, reptile: 1 } },
+        ],
+      },
+      {
+        text: "Думая о детях (реальных или гипотетических), ты скорее думаешь о:",
+        answers: [
+          { t: "Стабильности", w: { tree: 2, hive: 1 } },
+          { t: "Внутреннем мире", w: { mycelium: 2, tree: 1 } },
+          { t: "Воспитании и структуре", w: { hive: 2, mammal: 1 } },
+          { t: "Выживании и защите", w: { reptile: 2, tree: 1 } },
+          { t: "Любви", w: { mammal: 2, mycelium: 1 } },
+        ],
+      },
+      {
+        text: "Жизнь для тебя — это:",
+        answers: [
+          { t: "Процесс роста", w: { tree: 2, mycelium: 1 } },
+          { t: "Путь трансформации", w: { mycelium: 2, reptile: 1 } },
+          { t: "Последовательность действий", w: { hive: 2, tree: 1 } },
+          { t: "Среда для выживания", w: { reptile: 2, hive: 1 } },
+          { t: "История чувств", w: { mammal: 2, mycelium: 1 } },
+        ],
+      },
+      {
+        text: "Если ничего не нужно доказывать, ты бы:",
+        answers: [
+          { t: "Просто был", w: { tree: 2, reptile: 1 } },
+          { t: "Чувствовал и наблюдал", w: { mycelium: 2, tree: 1 } },
+          { t: "Делал что-то полезное", w: { hive: 2, mammal: 1 } },
+          { t: "Отдыхал", w: { reptile: 2, tree: 1 } },
+          { t: "Был с кем-то", w: { mammal: 2, tree: 1 } },
+        ],
+      },
+      {
+        text: "Твоя главная сила — в:",
+        answers: [
+          { t: "Устойчивости", w: { tree: 2, hive: 1 } },
+          { t: "Глубине", w: { mycelium: 2, mammal: 1 } },
+          { t: "Функциональности", w: { hive: 2, reptile: 1 } },
+          { t: "Адаптивности", w: { reptile: 2, hive: 1 } },
+          { t: "Эмоциональности", w: { mammal: 2, mycelium: 1 } },
+        ],
+      },
+      {
+        text: "А твоя главная уязвимость — в:",
+        answers: [
+          { t: "Пассивности", w: { tree: 2, mycelium: 1 } },
+          { t: "Растворённости", w: { mycelium: 2, mammal: 1 } },
+          { t: "Перегрузе", w: { hive: 2, mammal: 1 } },
+          { t: "Отстранённости", w: { reptile: 2, tree: 1 } },
+          { t: "Ранимости", w: { mammal: 2, mycelium: 1 } },
+        ],
+      },
+    ];
+
+    // ---------- ЛОГИКА ТЕСТА ----------
+    const app = document.getElementById("app");
+
+    const state = {
+      seed: null,
+      order: [],
+      idx: 0,
+      // история выбранных ответов: {qIndex, answerObj}
+      picks: [],
+      scores: { mammal: 0, reptile: 0, tree: 0, mycelium: 0, hive: 0 },
+    };
+
+    function shuffle(arr) {
+      // Fisher-Yates
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function reset() {
+      state.idx = 0;
+      state.picks = [];
+      state.scores = { mammal: 0, reptile: 0, tree: 0, mycelium: 0, hive: 0 };
+      state.order = shuffle([...Array(QUESTIONS.length).keys()]);
+      render();
+    }
+
+    function progressPct() {
+      return Math.round((state.idx / QUESTIONS.length) * 100);
+    }
+
+    function addWeights(w) {
+      for (const k of Object.keys(w)) {
+        state.scores[k] = (state.scores[k] || 0) + w[k];
+      }
+    }
+    function removeWeights(w) {
+      for (const k of Object.keys(w)) {
+        state.scores[k] = (state.scores[k] || 0) - w[k];
+      }
+    }
+
+    function pickAnswer(answerObj) {
+      const qIndex = state.order[state.idx];
+      state.picks[state.idx] = { qIndex, answerObj };
+      addWeights(answerObj.w);
+      state.idx += 1;
+      render();
+    }
+
+    function goBack() {
+      if (state.idx <= 0) return;
+      const prev = state.picks[state.idx - 1];
+      if (prev?.answerObj?.w) removeWeights(prev.answerObj.w);
+      state.picks.pop();
+      state.idx -= 1;
+      render();
+    }
+
+    function computeResult() {
+      const entries = Object.entries(state.scores);
+      const max = Math.max(...entries.map(([, v]) => v));
+      const top = entries.filter(([, v]) => v === max).map(([k]) => k);
+      const winner = top[Math.floor(Math.random() * top.length)]; // тай-брейк
+      return { winner, scores: state.scores };
+    }
+
+    function renderStart() {
+      app.innerHTML = `
+        <h1>Форма жизни</h1>
+        <div class="muted">Психологический тест (фановый). Вопросы и ответы перемешиваются, логика скрыта.</div>
+        <div class="spacer"></div>
+        <div class="row">
+          <span class="pill">Вопросов: ${QUESTIONS.length}</span>
+          <span class="pill">Рандом: включён</span>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn primary" id="startBtn">Начать</button>
+      `;
+      document.getElementById("startBtn").onclick = reset;
+    }
+
+    function renderQuestion() {
+      const qIndex = state.order[state.idx];
+      const q = QUESTIONS[qIndex];
+
+      const answers = shuffle(q.answers); // рандом ответа на каждый показ вопроса
+      const pct = progressPct();
+
+      app.innerHTML = `
+        <div class="row" style="justify-content:space-between;">
+          <div class="pill">Вопрос ${state.idx + 1} из ${QUESTIONS.length}</div>
+          <div class="pill">${pct}%</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="progress"><div class="bar" style="width:${pct}%;"></div></div>
+        <div class="qtitle">${q.text}</div>
+        <div class="answers" id="answers"></div>
+        <div class="spacer"></div>
+        <div class="row">
+          <button class="btn" id="backBtn" ${state.idx === 0 ? "disabled" : ""}>Назад</button>
+          <span class="muted mini">Выбирай интуитивно, не раздумывая.</span>
+        </div>
+      `;
+
+      const answersEl = document.getElementById("answers");
+      answers.forEach((a) => {
+        const btn = document.createElement("button");
+        btn.className = "choice";
+        btn.type = "button";
+        btn.textContent = a.t;
+        btn.onclick = () => pickAnswer(a);
+        answersEl.appendChild(btn);
+      });
+
+      document.getElementById("backBtn").onclick = goBack;
+    }
+
+    function renderResult() {
+      const { winner, scores } = computeResult();
+      const max = Math.max(...Object.values(scores));
+      const norm = max === 0 ? 1 : max;
+
+      const order = Object.keys(TYPES);
+
+      app.innerHTML = `
+        <h1>Твой результат</h1>
+        <div class="resultTitle">${TYPES[winner]}</div>
+        <div class="muted">${TYPE_DESC[winner]}</div>
+
+        <div class="spacer"></div>
+        <div class="grid2">
+          ${order.map((k) => {
+            const v = scores[k];
+            const pct = Math.round((v / norm) * 100);
+            return `
+              <div class="card" style="padding:14px; border-radius:14px;">
+                <div class="scoreRow">
+                  <div>${TYPES[k]}</div>
+                  <div class="muted">${v}</div>
+                </div>
+                <div class="spacer" style="height:8px;"></div>
+                <div class="scoreBarWrap"><div class="scoreBar" style="width:${pct}%;"></div></div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+
+        <div class="spacer"></div>
+        <div class="row">
+          <button class="btn primary" id="againBtn">Пройти ещё раз</button>
+          <button class="btn" id="homeBtn">На старт</button>
+        </div>
+      `;
+
+      document.getElementById("againBtn").onclick = reset;
+      document.getElementById("homeBtn").onclick = () => {
+        state.idx = 0;
+        state.picks = [];
+        state.scores = { mammal: 0, reptile: 0, tree: 0, mycelium: 0, hive: 0 };
+        state.order = [];
+        render();
+      };
+    }
+
+    function render() {
+      if (!state.order.length && state.idx === 0 && state.picks.length === 0) {
+        renderStart();
+        return;
+      }
+      if (state.idx < QUESTIONS.length) {
+        renderQuestion();
+        return;
+      }
+      renderResult();
+    }
+
+    renderStart();
+  </script>
 </body>
 </html>
-
