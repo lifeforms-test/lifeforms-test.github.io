@@ -13,26 +13,38 @@
   color: #e6f0ff;
 }
 
-    :root { --pad: 18px; --radius: 16px; }
-  background:
-  linear-gradient(rgba(5, 10, 20, 0.55), rgba(5, 10, 20, 0.70)),
-  url("./bg-tech.jpg");
+  :root { --pad: 18px; --radius: 16px; }
 
-background-size: cover;
-background-position: center;
-background-repeat: no-repeat;
-background-attachment: fixed;
-    }
-    .wrap { max-width: 780px; margin: 0 auto; padding: 28px 16px; }
+html, body { height: 100%; }
+
+body {
+  font-family: 'Press Start 2P', monospace;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  color: #e6f0ff;
+
+  background:
+    linear-gradient(rgba(5, 10, 20, 0.55), rgba(5, 10, 20, 0.70)),
+    url("./bg-tech.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+h1, h2, h3, p, .muted { color: #e6f0ff; }
+
+.wrap { max-width: 780px; margin: 0 auto; padding: 28px 16px; }
     .card {
-  background: transparent;
+  background: rgba(2, 6, 23, 0.75);
   border: 2px solid #38bdf8;
   border-radius: 0;
   padding: var(--pad);
   box-shadow:
     0 0 0 2px #0f766e,
     6px 6px 0 #000;
-    }
+}
     .stat {
   display: inline-block;
   padding: 6px 10px;
