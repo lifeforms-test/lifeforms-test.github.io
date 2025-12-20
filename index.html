@@ -199,6 +199,50 @@ button.choice:active {
     inset 0 0 16px rgba(250, 204, 21, 0.16),
     2px 2px 0 #000;
 }
+    /* Start screen */
+.startPanel {
+  background: rgba(2, 6, 23, 0.78);
+  border: 2px solid rgba(250, 204, 21, 0.40);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 0 26px rgba(250, 204, 21, 0.10),
+    0 0 26px rgba(34, 197, 94, 0.08),
+    6px 6px 0 #000;
+  padding: 18px;
+  border-radius: 0; /* как интерфейс */
+}
+
+.brand {
+  font-family: Cinzel, serif; /* если Cinzel нет, будет serif */
+  font-size: 34px;
+  letter-spacing: 1px;
+  margin: 0 0 10px;
+  color: rgba(255, 236, 190, 0.95);
+  text-shadow: 0 0 18px rgba(250, 204, 21, 0.18);
+}
+
+.brandSub {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin-bottom: 14px;
+}
+
+.lead {
+  line-height: 1.7;
+  opacity: 0.9;
+  margin: 0 0 14px;
+}
+
+.note {
+  font-size: 12px;
+  opacity: 0.75;
+  line-height: 1.6;
+  margin: 0;
+}
+
   </style>
 </head>
 <body>
@@ -497,19 +541,30 @@ const TYPE_HELP = {
     }
 
     function renderStart() {
-      app.innerHTML = `
-        <h1>Форма жизни</h1>
-        <div class="muted">Психологический тест (фановый). Вопросы и ответы перемешиваются, логика скрыта.</div>
-        <div class="spacer"></div>
-        <div class="row">
-          <span class="pill">Вопросов: ${QUESTIONS.length}</span>
-          <span class="pill">Рандом: включён</span>
-        </div>
-        <div class="spacer"></div>
+  app.innerHTML = `
+    <div class="startPanel">
+      <div class="brandSub">интерфейс самоощущения</div>
+      <h1 class="brand">Форма жизни</h1>
+
+      <p class="lead">
+        Небольшой тест, чтобы посмотреть, какая форма жизни сейчас ближе: темп, реакция на сложность,
+        отношения, потребности. Без диагнозов — просто отражение.
+      </p>
+
+      <p class="note">
+        Вопросы и варианты ответов перемешиваются. Выбирай интуитивно — долго не думай.
+      </p>
+
+      <div class="spacer"></div>
+      <div class="row">
         <button class="btn start" id="startBtn">Начать</button>
-      `;
-      document.getElementById("startBtn").onclick = reset;
-    }
+        <span class="pill">Вопросов: ${QUESTIONS.length}</span>
+      </div>
+    </div>
+  `;
+  document.getElementById("startBtn").onclick = reset;
+}
+
 
     function renderQuestion() {
       const qIndex = state.order[state.idx];
