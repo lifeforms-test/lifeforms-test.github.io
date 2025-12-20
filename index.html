@@ -55,14 +55,24 @@ text-shadow: 0 0 6px rgba(124,255,154,.35);
 h1, h2, h3, p, .muted { color: #e6f0ff; }
 
 .wrap { max-width: 780px; margin: 0 auto; padding: 28px 16px; }
-    .card {
-  background: rgba(2, 6, 23, 0.75);
-  border: 1px solid rgba(124,255,154,0.22);
+  .card {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(20, 30, 20, 0.92),
+      rgba(8, 14, 10, 0.96)
+    );
+
+  border: 1px solid rgba(124,255,154,0.35);
   border-radius: 0;
-  padding: var(--pad);
+
+  padding: 32px;
+  position: relative;
+
   box-shadow:
-    0 0 0 2px rgba(124,255,154,0.25),
-    6px 6px 0 #000;
+    inset 0 0 25px rgba(124,255,154,0.08),
+    0 0 0 1px rgba(124,255,154,0.25),
+    0 20px 60px rgba(0,0,0,0.6);
 }
     .stat {
   display: inline-block;
